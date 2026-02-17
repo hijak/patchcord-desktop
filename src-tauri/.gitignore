@@ -9,10 +9,10 @@ Cargo.lock
 /gen/schemas
 
 # Tauri configuration
-tauri.conf.json
+# tauri.conf.json (committed)
 
 # Icons
-icons/
+# icons/ (committed)
 
 # Built bundles
 /target/release/bundle/
