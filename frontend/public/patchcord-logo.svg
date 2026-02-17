@@ -1,0 +1,18 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="256" height="256" rx="56" fill="#020617"/>
+  <rect x="10" y="10" width="236" height="236" rx="48" fill="#030712" stroke="#0F172A" stroke-width="4"/>
+
+  <circle cx="128" cy="128" r="80" fill="none" stroke="#22C55E" stroke-width="10" stroke-linecap="round" stroke-dasharray="10 16"/>
+
+  <rect x="76" y="86" width="112" height="80" rx="18" fill="#020617" stroke="#22C55E" stroke-width="6"/>
+  <path d="M116 166 L112 188 L134 166" fill="#020617" stroke="#22C55E" stroke-width="6" stroke-linejoin="round"/>
+
+  <text x="132" y="138" text-anchor="middle" dominant-baseline="middle"
+        font-family="JetBrains Mono, SF Mono, Menlo, monospace"
+        font-size="56" font-weight="700" fill="#E5E7EB">
+    P
+  </text>
+
+  <circle cx="188" cy="84" r="8" fill="#22C55E"/>
+</svg>
+

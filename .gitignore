@@ -1,0 +1,12 @@
+/target
+**/target
+dist
+.DS_Store
+# Node/Next artifacts
+node_modules
+.next
+out
+# Tauri build artifacts
+**/src-tauri/target
+**/src-tauri/tauri.conf.json.bak
+
