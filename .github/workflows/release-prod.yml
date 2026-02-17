@@ -66,5 +66,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tauriScript: pnpm tauri build
-          args: --target ${{ matrix.target }}
+          tauriScript: pnpm tauri
+          args: build --target ${{ matrix.target }}
