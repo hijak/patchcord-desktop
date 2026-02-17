@@ -66,5 +66,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          # Ensure artifacts upload to the GitHub Release for this tag
+          tagName: ${{ github.ref_name }}
+          releaseName: Patchcord Desktop ${{ github.ref_name }}
+          releaseDraft: false
+          prerelease: false
           tauriScript: pnpm tauri
           args: --target ${{ matrix.target }}
