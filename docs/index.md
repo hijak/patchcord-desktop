@@ -27,11 +27,11 @@ pnpm dev
 
 ## Getting Help
 
-- [Getting Started Guide]({% link docs/getting-started.md %}) - Learn the basics
-- [Configuration]({% link docs/configuration.md %}) - Customize your experience
-- [IRC Commands]({% link docs/commands.md %}) - Available IRC commands
-- [Themes]({% link docs/themes.md %}) - Available color themes
-- [Troubleshooting]({% link docs/troubleshooting.md %}) - Common issues and solutions
+- [Getting Started Guide]({% link getting-started.md %}) - Learn the basics
+- [Configuration]({% link configuration.md %}) - Customize your experience
+- [IRC Commands]({% link commands.md %}) - Available IRC commands
+- [Themes]({% link themes.md %}) - Available color themes
+- [Troubleshooting]({% link troubleshooting.md %}) - Common issues and solutions
 
 ## Features Overview
 

@@ -5,7 +5,7 @@ theme: just-the-docs
 baseurl: ""
 url: "https://patchcord.github.io"
 
-repository: patchcord/patchcord
+repository: hijak/patchcord-desktop
 
 permalink: pretty
 
@@ -31,9 +31,9 @@ defaults:
 # Navigation
 nav_external_links:
   - title: GitHub Repository
-    url: https://github.com/patchcord/patchcord
+    url: https://github.com/hijak/patchcord-desktop
   - title: Download Releases
-    url: https://github.com/patchcord/patchcord/releases
+    url: https://github.com/hijak/patchcord-desktop/releases
 
 # Callouts
 callouts:
@@ -54,7 +54,7 @@ mermaid:
 # Aux links (top right)
 aux_links:
   "View on GitHub":
-    - "https://github.com/patchcord/patchcord"
+    - "https://github.com/hijak/patchcord-desktop"
 
 # Footer content
 footer_content: "Copyright &copy; 2024 Patchcord. Distributed under the MIT License."

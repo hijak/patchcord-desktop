@@ -416,6 +416,6 @@ Access previous commands:
 
 ## Next Steps
 
-- [Configuration]({% link docs/configuration.md %}) - Customize settings
-- [Themes]({% link docs/themes.md %}) - Available themes
-- [Troubleshooting]({% link docs/troubleshooting.md %}) - Common issues
+- [Configuration]({% link configuration.md %}) - Customize settings
+- [Themes]({% link themes.md %}) - Available themes
+- [Troubleshooting]({% link troubleshooting.md %}) - Common issues

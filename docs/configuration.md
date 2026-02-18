@@ -193,6 +193,6 @@ Settings are stored in:
 
 ## Next Steps
 
-- [IRC Commands]({% link docs/commands.md %}) - Available IRC commands
-- [Themes]({% link docs/themes.md %}) - Theme gallery and customization
-- [Troubleshooting]({% link docs/troubleshooting.md %}) - Common issues
+- [IRC Commands]({% link commands.md %}) - Available IRC commands
+- [Themes]({% link themes.md %}) - Theme gallery and customization
+- [Troubleshooting]({% link troubleshooting.md %}) - Common issues

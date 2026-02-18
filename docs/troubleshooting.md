@@ -342,6 +342,6 @@ If your issue isn't listed here:
 
 ## Previous Steps
 
-- [Commands]({% link docs/commands.md %}) - IRC command reference
-- [Configuration]({% link docs/configuration.md %}) - Settings guide
-- [Themes]({% link docs/themes.md %}) - Theme gallery
+- [Commands]({% link commands.md %}) - IRC command reference
+- [Configuration]({% link configuration.md %}) - Settings guide
+- [Themes]({% link themes.md %}) - Theme gallery

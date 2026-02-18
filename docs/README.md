@@ -104,7 +104,7 @@ Content here...
 ### Internal Links
 
 ```markdown
-[Getting Started]({% link docs/getting-started.md %})
+[Getting Started]({% link getting-started.md %})
 ```
 
 ### Images

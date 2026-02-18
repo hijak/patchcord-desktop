@@ -296,6 +296,6 @@ For better visibility, try:
 
 ## Next Steps
 
-- [Configuration]({% link docs/configuration.md %}) - More appearance settings
-- [Commands]({% link docs/commands.md %}) - IRC commands
-- [Troubleshooting]({% link docs/troubleshooting.md %}) - Common issues
+- [Configuration]({% link configuration.md %}) - More appearance settings
+- [Commands]({% link commands.md %}) - IRC commands
+- [Troubleshooting]({% link troubleshooting.md %}) - Common issues

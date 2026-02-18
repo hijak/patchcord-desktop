@@ -139,7 +139,7 @@ Set `nav_order` to control page order:
 Use Jekyll's link syntax:
 
 ```markdown
-[Page Name]({% link docs/page.md %})
+[Page Name]({% link page.md %})
 ```
 
 ## Testing Changes
@@ -226,7 +226,7 @@ bundle exec jekyll serve
 
 **Solution:** Use `{% link %}` syntax:
 ```markdown
-[Link]({% link docs/page.md %})
+[Link]({% link page.md %})
 ```
 
 ### CSS Not Loading

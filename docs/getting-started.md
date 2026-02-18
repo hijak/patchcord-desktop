@@ -114,6 +114,6 @@ Access settings with `Ctrl+,` or by clicking the gear icon.
 
 ## Next Steps
 
-- [Configuration Guide]({% link docs/configuration.md %}) - Detailed settings
-- [IRC Commands]({% link docs/commands.md %}) - Available commands
-- [Themes]({% link docs/themes.md %}) - Theme gallery
+- [Configuration Guide]({% link configuration.md %}) - Detailed settings
+- [IRC Commands]({% link commands.md %}) - Available commands
+- [Themes]({% link themes.md %}) - Theme gallery
