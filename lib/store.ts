@@ -1422,10 +1422,18 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
         case 'notice':
           if (event.nick && event.content) {
             const nickLower = event.nick.toLowerCase()
+            const serverForNotice = get().servers.find((s) => s.id === event.server_id)
+            const myNick = serverForNotice?.nickname?.toLowerCase()
 
             // Network status-style notices (e.g. "-*status-") should go to the server console,
             // not into individual channels.
             if (nickLower === '-*status-') {
+              get().addServerMessage(event.server_id, event.content, 'notice', event.nick)
+              break
+            }
+
+            // NOTICEs addressed to our own nick are server/service notices, not channel messages.
+            if (event.channel && myNick && event.channel.toLowerCase() === myNick) {
               get().addServerMessage(event.server_id, event.content, 'notice', event.nick)
               break
             }

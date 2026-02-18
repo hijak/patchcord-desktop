@@ -61,6 +61,11 @@ jobs:
         env:
           NEXT_PUBLIC_BUILD_MODE: prod
 
+      - name: Sync Tauri bundle version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          node -e "const fs=require('fs'); const path='src-tauri/tauri.conf.json'; const tag=(process.env.GITHUB_REF_NAME||'').trim(); const version=tag.replace(/^v/,''); if(!version){throw new Error('Missing version tag');} const json=JSON.parse(fs.readFileSync(path,'utf8')); json.version=version; fs.writeFileSync(path, JSON.stringify(json,null,2)+'\n'); console.log('Set tauri.conf.json version to', version);"
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
