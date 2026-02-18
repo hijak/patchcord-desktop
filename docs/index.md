@@ -35,6 +35,12 @@ pnpm dev
 
 ## Features Overview
 
+### 🔒 Secure Storage
+Passwords and sensitive data are stored securely using your operating system's native keychain/credentials manager.
+
+### 📡 IRCv3 Support
+Modern IRC capabilities including `message-tags`, `server-time`, `batch`, `invite-notify`, and `echo-message`.
+
 ### 🎨 Beautiful UI
 Clean, modern interface designed for developers with dark/light theme support.
 

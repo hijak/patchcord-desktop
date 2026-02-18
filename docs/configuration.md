@@ -73,6 +73,8 @@ Edit server settings:
 2. Select **Edit Server**
 3. Modify connection parameters
 
+> **Note**: Server passwords and SASL credentials are stored securely in your operating system's keychain, not in plain text configuration files.
+
 #### Advanced Server Options
 
 | Option | Description |
@@ -158,6 +160,19 @@ Customize message timestamps:
 - **Show Nick Changes**: Display nickname changes
 - **Compact Nicknames**: Show nicknames in brackets
 - **Timestamp Alignment**: Left or right aligned
+
+### Message Context Menu
+
+Right-click on any message to access quick actions:
+
+- **Copy selection**: Copy the currently highlighted text
+- **Copy entire message**: Copy the full message content
+- **Quote user**: Insert `@username` into the input box
+- **Quote text**: Insert `> username: message` into the input box
+- **Whois user**: Perform a `/whois` on the user
+- **DM user**: Open a direct message query with the user
+
+> **Note**: In the Server Console, context menu options are optimized for debugging (Copy/Paste only).
 
 ## Keyboard Shortcuts
 

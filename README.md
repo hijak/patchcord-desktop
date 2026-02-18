@@ -8,6 +8,8 @@
 
 ## ✨ Features
 
+- 🛡️ **Secure Storage** - Passwords stored in system keychain (Keyring/Credentials Manager)
+- 📡 **IRCv3 Support** - Modern capabilities (`message-tags`, `server-time`, `batch`, `invite-notify`, `echo-message`)
 - 🎨 **Beautiful UI** - Clean, modern interface with dark/light themes
 - ⚡ **Fast & Lightweight** - Built on Next.js with native desktop performance via Tauri
 - 🔔 **Smart Notifications** - Tab flash and desktop notifications for mentions
