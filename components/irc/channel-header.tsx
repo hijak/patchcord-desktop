@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import type { ConnectionStatus } from "@/lib/types"
+import { parseMessageContent } from "./code-block"
 
 function ConnectionStatusBar() {
   const servers = useIRCStore((s) => s.servers)
@@ -74,6 +75,7 @@ export function ChannelHeader() {
   const server = servers.find((s) => s.id === activeView.serverId)
   const isServerConsole = !activeView.channelId
   const channel = isServerConsole ? null : server?.channels.find((c) => c.id === activeView.channelId)
+  const settings = useIRCStore((s) => s.settings)
 
   const [editingTopic, setEditingTopic] = useState(false)
   const [topicValue, setTopicValue] = useState("")
@@ -84,7 +86,7 @@ export function ChannelHeader() {
   const meInChannel = channel?.users.find((u) => u.nickname === myNick)
   const canEditTopic = !!channel && !channel.isDirectMessage && !!meInChannel?.isOp
 
-  const topicDisplay =
+  const topicText =
     channel && !channel.isDirectMessage
       ? (() => {
           if (channel.topic && channel.topic.trim()) return channel.topic
@@ -104,6 +106,8 @@ export function ChannelHeader() {
           return "No topic set"
         })()
       : ""
+  
+  const topicDisplay = topicText ? parseMessageContent(topicText, settings.syntaxHighlighting, settings.ircColors) : null
 
   const handleTopicEdit = () => {
     setTopicValue(channel?.topic || "")
@@ -320,9 +324,11 @@ export function ChannelHeader() {
               {server.host}:{server.port}{server.ssl ? " (SSL)" : ""}
             </p>
           </div>
-        ) : channel && !channel.isDirectMessage && channel.topic ? (
+        ) : channel && !channel.isDirectMessage && topicText ? (
           <div className="border-t px-3 py-1 md:hidden">
-            <p className="truncate font-mono text-[10px] text-muted-foreground">{channel.topic}</p>
+            <p className="truncate font-mono text-[10px] text-muted-foreground">
+              {topicDisplay}
+            </p>
           </div>
         ) : null}
       </div>

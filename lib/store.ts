@@ -1432,6 +1432,103 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
             }))
           }
           break
+        case 'mode':
+          if (event.channel && event.content) {
+            const channelId = ensureChannel(event.channel)
+            const modeContent = event.content
+            const setterNick = event.nick || (event.ident ? event.ident.split('!')[0] || 'server' : 'server')
+            
+            // Parse mode change like "+o nick" or "-o nick"
+            const parts = modeContent.split(' ')
+            if (parts.length >= 2) {
+              const modeChange = parts[0] // e.g., "+o" or "-o"
+              const targetNick = parts[1] // nickname
+              
+              // Check if it's a user mode change (operator, voice, etc.)
+              if (modeChange.length === 2 && (modeChange[1] === 'o' || modeChange[1] === 'v' || modeChange[1] === 'h' || modeChange[1] === 'a')) {
+                const isAdding = modeChange[0] === '+'
+                const modeType = modeChange[1]
+                
+                // Update user in channel
+                set((s) => ({
+                  servers: s.servers.map((srv) =>
+                    srv.id === event.server_id
+                      ? {
+                          ...srv,
+                          channels: srv.channels.map((c) => {
+                            if (c.id !== channelId) return c
+                            
+                            const updatedUsers = c.users.map((u) => {
+                              if (u.nickname !== targetNick) return u
+                              
+                              let newModes = [...u.modes]
+                              let newIsOp = u.isOp
+                              let newIsVoiced = u.isVoiced
+                              
+                              if (modeType === 'o' || modeType === 'a') {
+                                // Operator mode
+                                if (isAdding) {
+                                  if (!newModes.includes('@')) newModes.push('@')
+                                  newIsOp = true
+                                } else {
+                                  newModes = newModes.filter(m => m !== '@' && m !== '~' && m !== '&')
+                                  newIsOp = false
+                                }
+                              } else if (modeType === 'v' || modeType === 'h') {
+                                // Voice mode
+                                if (isAdding) {
+                                  if (!newModes.includes('+')) newModes.push('+')
+                                  newIsVoiced = true
+                                } else {
+                                  newModes = newModes.filter(m => m !== '+')
+                                  newIsVoiced = false
+                                }
+                              }
+                              
+                              return {
+                                ...u,
+                                modes: newModes,
+                                isOp: newIsOp,
+                                isVoiced: newIsVoiced,
+                              }
+                            })
+                            
+                            return { ...c, users: updatedUsers }
+                          }),
+                        }
+                      : srv
+                  ),
+                }))
+                
+                // Add chat message
+                const modeName = modeType === 'o' ? 'operator' : modeType === 'v' ? 'voice' : modeType === 'a' ? 'admin' : 'halfop'
+                const action = isAdding ? 'granted' : 'removed'
+                appendChannelMessage(
+                  event.channel,
+                  setterNick,
+                  `${setterNick} ${action} ${modeName} status to ${targetNick}`,
+                  'mode'
+                )
+              } else {
+                // Channel mode change (not user-specific)
+                appendChannelMessage(
+                  event.channel,
+                  setterNick,
+                  `${setterNick} sets mode ${modeContent}`,
+                  'mode'
+                )
+              }
+            } else {
+              // Simple channel mode change
+              appendChannelMessage(
+                event.channel,
+                setterNick,
+                `${setterNick} sets mode ${modeContent}`,
+                'mode'
+              )
+            }
+          }
+          break
         default:
           break
       }

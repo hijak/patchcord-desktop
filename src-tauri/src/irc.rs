@@ -437,6 +437,71 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                 .emit(app);
             }
         }
+        "MODE" => {
+            // MODE #channel +o nick
+            // MODE #channel -o nick
+            // MODE #channel +nst (channel modes)
+            if parsed.params.len() >= 2 {
+                let target = &parsed.params[0];
+                let mode_str = &parsed.params[1];
+                
+                // Check if it's a channel mode (starts with # or &)
+                if target.starts_with('#') || target.starts_with('&') {
+                    let channel = target.clone();
+                    
+                    // If there are more params, they're user mode changes (e.g., +o nick)
+                    if parsed.params.len() > 2 {
+                        // Parse mode string to extract individual mode changes
+                        let mut current_sign = '+';
+                        let mut modes_vec = Vec::new();
+                        
+                        for ch in mode_str.chars() {
+                            match ch {
+                                '+' => current_sign = '+',
+                                '-' => current_sign = '-',
+                                _ => {
+                                    // For each mode character, emit an event if there's a corresponding nick
+                                    let mode_char = ch;
+                                    // Find the corresponding nick (params[2] for first mode, params[3] for second, etc.)
+                                    let mode_index = modes_vec.len();
+                                    if parsed.params.len() > 2 + mode_index {
+                                        let nick = parsed.params[2 + mode_index].clone();
+                                        let mode_change = format!("{}{}", current_sign, mode_char);
+                                        IrcEvent {
+                                            server_id: server_id.to_string(),
+                                            kind: "mode".to_string(),
+                                            channel: Some(channel.clone()),
+                                            nick: Some(nick.clone()),
+                                            ident: parsed.prefix.clone(),
+                                            content: Some(format!("{} {}", mode_change, nick)),
+                                            users: None,
+                                            raw: None,
+                                            status: None,
+                                        }
+                                        .emit(app);
+                                        modes_vec.push((mode_change, nick));
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Channel mode change without user params (e.g., +nst)
+                        IrcEvent {
+                            server_id: server_id.to_string(),
+                            kind: "mode".to_string(),
+                            channel: Some(channel),
+                            nick: parsed.nick(),
+                            ident: parsed.prefix.clone(),
+                            content: Some(mode_str.clone()),
+                            users: None,
+                            raw: None,
+                            status: None,
+                        }
+                        .emit(app);
+                    }
+                }
+            }
+        }
         "433" => {
             IrcEvent {
                 server_id: server_id.to_string(),

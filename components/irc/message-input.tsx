@@ -40,6 +40,7 @@ export function MessageInput() {
   const [tabCompleteIndex, setTabCompleteIndex] = useState(-1)
   const [selectionStart, setSelectionStart] = useState(0)
   const [selectionEnd, setSelectionEnd] = useState(0)
+  const [historyIndex, setHistoryIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const activeView = useIRCStore((s) => s.activeView)
@@ -383,6 +384,7 @@ export function MessageInput() {
     if (!value.trim()) return
 
     addToCommandHistory(value)
+    setHistoryIndex(-1)
 
     if (value.startsWith("/")) {
       handleCommand(value)
@@ -449,9 +451,69 @@ export function MessageInput() {
       return
     }
 
-    if (e.key === "ArrowUp" && !value) {
-      const lastCmd = commandHistory[commandHistory.length - 1]
-      if (lastCmd) setValue(lastCmd)
+    if (e.key === "ArrowUp") {
+      e.preventDefault()
+      if (commandHistory.length === 0) return
+      
+      let newIndex = historyIndex
+      if (newIndex === -1) {
+        // Start from the end
+        newIndex = commandHistory.length - 1
+      } else if (newIndex > 0) {
+        // Move up in history
+        newIndex = newIndex - 1
+      }
+      
+      setHistoryIndex(newIndex)
+      const historyValue = commandHistory[newIndex]
+      if (historyValue) {
+        setValue(historyValue)
+        // Set cursor to end after value is set
+        setTimeout(() => {
+          if (inputRef.current) {
+            const len = historyValue.length
+            inputRef.current.setSelectionRange(len, len)
+            setSelectionStart(len)
+            setSelectionEnd(len)
+          }
+        }, 0)
+      }
+      return
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      if (historyIndex === -1) return
+      
+      let newIndex = historyIndex
+      if (newIndex < commandHistory.length - 1) {
+        // Move down in history
+        newIndex = newIndex + 1
+        setHistoryIndex(newIndex)
+        const historyValue = commandHistory[newIndex]
+        if (historyValue) {
+          setValue(historyValue)
+          // Set cursor to end after value is set
+          setTimeout(() => {
+            if (inputRef.current) {
+              const len = historyValue.length
+              inputRef.current.setSelectionRange(len, len)
+              setSelectionStart(len)
+              setSelectionEnd(len)
+            }
+          }, 0)
+        }
+      } else {
+        // Reached the bottom, clear input
+        setHistoryIndex(-1)
+        setValue("")
+      }
+      return
+    }
+
+    // Reset history index when user types
+    if (historyIndex !== -1 && e.key.length === 1) {
+      setHistoryIndex(-1)
     }
 
     setTabCompleteIndex(-1)
