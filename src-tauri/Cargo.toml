@@ -1,6 +1,6 @@
 [package]
 name = "patchcord-desktop"
-version = "0.1.11"
+version = "0.1.12"
 description = "Patchcord desktop app"
 authors = ["Patchcord"]
 license = ""

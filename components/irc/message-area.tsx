@@ -376,7 +376,7 @@ export function MessageArea() {
   const messages = isServerConsole ? (server?.serverMessages || []) : (channel?.messages || [])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+    bottomRef.current?.scrollIntoView({ behavior: "auto" })
   }, [messages.length])
 
   if (!server) {

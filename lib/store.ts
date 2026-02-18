@@ -1073,6 +1073,11 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
     if (!isLiveBuild || nativeBridgeInitialized) return
     nativeBridgeInitialized = true
 
+    // State for high-volume LIST output to avoid freezing the UI
+    let currentListCount = 0
+    let listTruncated = false
+    const MAX_LIST_ITEMS = 400
+
     void listenNativeIrcEvents((event) => {
       const state = get()
       const server = state.servers.find((s) => s.id === event.server_id)
@@ -1227,6 +1232,8 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
           if (event.content) get().addServerMessage(event.server_id, event.content)
           break
         case 'list_start': {
+          currentListCount = 0
+          listTruncated = false
           const active = get().activeView
           const channelId = active.channelId
           const serverId = active.serverId || event.server_id
@@ -1239,6 +1246,22 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
           break
         }
         case 'list_item': {
+          if (listTruncated) break
+          if (currentListCount >= MAX_LIST_ITEMS) {
+            listTruncated = true
+            const active = get().activeView
+            const channelId = active.channelId
+            const serverId = active.serverId || event.server_id
+            if (!serverId) break
+            const notice = `Channel list truncated after ${MAX_LIST_ITEMS} entries (too many results)`
+            if (channelId) {
+              get().addSystemMessage(serverId, channelId, notice)
+            } else {
+              get().addServerMessage(serverId, notice)
+            }
+            break
+          }
+          currentListCount++
           const active = get().activeView
           const channelId = active.channelId
           const serverId = active.serverId || event.server_id
