@@ -153,7 +153,7 @@ export function ChannelHeader() {
         </div>
 
         {/* Channel info and controls */}
-        <div className="flex items-center gap-2 px-3 py-2 min-h-[2.75rem]">
+        <div className="flex min-w-0 items-center gap-2 px-3 py-2 min-h-[2.75rem]">
           {/* Mobile hamburger */}
           <Button
             variant="ghost"
@@ -184,7 +184,7 @@ export function ChannelHeader() {
 
           {isServerConsole ? (
             <>
-              <div className="flex items-center gap-1.5">
+              <div className="flex min-w-0 items-center gap-1.5">
                 <Monitor className="h-4 w-4 text-primary" />
                 <h2 className="font-mono text-sm font-bold text-foreground">{server.name}</h2>
                 <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
@@ -206,7 +206,7 @@ export function ChannelHeader() {
                 ) : (
                   <Hash className="h-4 w-4 text-muted-foreground" />
                 )}
-                <h2 className="font-mono text-sm font-bold text-foreground">{channel.name}</h2>
+                <h2 className="truncate font-mono text-sm font-bold text-foreground">{channel.name}</h2>
                 {channel.modes && !channel.isDirectMessage && (
                   <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
                     {channel.modes}
@@ -216,10 +216,10 @@ export function ChannelHeader() {
 
               {/* Topic */}
               {!channel.isDirectMessage && (
-                <div className="hidden flex-1 items-center gap-1 md:flex">
+                <div className="hidden min-w-0 flex-1 items-center gap-1 overflow-hidden md:flex">
                   <span className="mx-2 text-border">|</span>
                   {editingTopic && canEditTopic ? (
-                    <div className="flex flex-1 items-center gap-1">
+                    <div className="flex min-w-0 flex-1 items-center gap-1">
                       <input
                         type="text"
                         value={topicValue}
@@ -238,16 +238,16 @@ export function ChannelHeader() {
                   ) : canEditTopic ? (
                     <button
                       onClick={handleTopicEdit}
-                      className="group flex flex-1 items-center gap-1"
+                      className="group flex min-w-0 flex-1 items-center gap-1 overflow-hidden"
                     >
-                      <span className="truncate font-mono text-xs text-muted-foreground">
+                      <span className="block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-mono text-xs text-muted-foreground">
                         {topicDisplay}
                       </span>
                       <Pencil className="h-2.5 w-2.5 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground/50" />
                     </button>
                   ) : (
-                    <span className="flex flex-1 items-center gap-1">
-                      <span className="truncate font-mono text-xs text-muted-foreground">
+                    <span className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+                      <span className="block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-mono text-xs text-muted-foreground">
                         {topicDisplay}
                       </span>
                     </span>
