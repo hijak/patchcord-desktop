@@ -12,15 +12,15 @@ Welcome to the official Patchcord documentation. Patchcord is a modern, develope
 
 ### Installation
 
-1. Download the latest release from [GitHub Releases](https://github.com/patchcord/patchcord/releases)
+1. Download the latest release from [GitHub Releases](https://github.com/hijak/patchcord-desktop/releases)
 2. Install the application for your platform
 3. Launch Patchcord and connect to your favorite IRC server
 
 ### Building from Source
 
 ```bash
-git clone https://github.com/patchcord/patchcord.git
-cd patchcord/frontend
+git clone https://github.com/hijak/patchcord-desktop.git
+cd patchcord-desktop
 pnpm install
 pnpm dev
 ```
@@ -73,8 +73,8 @@ Works seamlessly on desktop and mobile browsers.
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](https://github.com/patchcord/patchcord/blob/main/CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](https://github.com/hijak/patchcord-desktop/blob/main/CONTRIBUTING.md) for details.
 
 ## License
 
-Patchcord is licensed under the [MIT License](https://github.com/patchcord/patchcord/blob/main/LICENSE).
+Patchcord is licensed under the [MIT License](https://github.com/hijak/patchcord-desktop/blob/main/LICENSE).
