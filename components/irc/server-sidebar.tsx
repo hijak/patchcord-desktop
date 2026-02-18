@@ -73,7 +73,7 @@ export function ServerSidebar({ onAddServer, onEditServer }: { onAddServer: () =
     <TooltipProvider delayDuration={300}>
       <div className="flex h-full flex-col bg-card text-card-foreground">
         {/* Header */}
-        <div className="flex h-[4.875rem] items-center justify-between px-3">
+        <div className="flex h-[4.6875rem] items-center justify-between px-3">
           <div className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
