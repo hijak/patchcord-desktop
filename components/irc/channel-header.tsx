@@ -130,7 +130,7 @@ export function ChannelHeader() {
     <TooltipProvider delayDuration={300}>
       <div className="border-b bg-card">
         {/* Connection status bar */}
-        <div className="flex items-center justify-between border-b px-3 py-1">
+        <div className="flex items-center justify-between px-3 py-1">
           <ConnectionStatusBar />
           <div className="flex items-center gap-1.5">
             {searchOpen && (
