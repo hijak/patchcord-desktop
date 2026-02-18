@@ -82,3 +82,34 @@ export async function sendNativeRaw(serverId: string, line: string) {
   await invoke("irc_raw", { serverId, line })
 }
 
+export async function openExternalUrl(url: string) {
+  if (!hasTauriInternals()) return
+  await invoke("open_external_url", { url })
+}
+
+export async function secureSetServerSecret(
+  serverId: string,
+  secretName: "password" | "saslPassword",
+  value: string
+) {
+  if (!hasTauriInternals()) return
+  await invoke("secure_set_server_secret", { serverId, secretName, value })
+}
+
+export async function secureGetServerSecret(
+  serverId: string,
+  secretName: "password" | "saslPassword"
+): Promise<string | null> {
+  if (!hasTauriInternals()) return null
+  const v = await invoke<string | null>("secure_get_server_secret", { serverId, secretName })
+  return v ?? null
+}
+
+export async function secureDeleteServerSecret(
+  serverId: string,
+  secretName: "password" | "saslPassword"
+) {
+  if (!hasTauriInternals()) return
+  await invoke("secure_delete_server_secret", { serverId, secretName })
+}
+

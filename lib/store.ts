@@ -12,6 +12,9 @@ import {
   partNativeIrc,
   sendNativePrivmsg,
   sendNativeRaw,
+  secureDeleteServerSecret,
+  secureGetServerSecret,
+  secureSetServerSecret,
 } from './irc-native'
 
 function hexToHSL(hex: string): string {
@@ -160,10 +163,8 @@ type ServerSnapshot = Pick<
   | 'nickname'
   | 'username'
   | 'realName'
-  | 'password'
   | 'saslEnabled'
   | 'saslUsername'
-  | 'saslPassword'
   | 'autoJoinChannels'
   | 'onJoinCommands'
 >
@@ -202,15 +203,31 @@ function saveServersSnapshot(servers: IRCServer[]) {
       nickname: s.nickname,
       username: s.username,
       realName: s.realName,
-      password: s.password,
       saslEnabled: s.saslEnabled,
       saslUsername: s.saslUsername,
-      saslPassword: s.saslPassword,
       autoJoinChannels: s.autoJoinChannels,
       onJoinCommands: s.onJoinCommands,
     }))
     localStorage.setItem('patchcord-servers', JSON.stringify(snapshot))
   } catch {}
+}
+
+function persistServerSecrets(server: IRCServer) {
+  if (!isLiveBuild) return
+
+  const pw = (server.password || '').trim()
+  if (pw.length > 0) {
+    void secureSetServerSecret(server.id, 'password', pw).catch(() => {})
+  } else {
+    void secureDeleteServerSecret(server.id, 'password').catch(() => {})
+  }
+
+  const saslPw = (server.saslPassword || '').trim()
+  if (saslPw.length > 0) {
+    void secureSetServerSecret(server.id, 'saslPassword', saslPw).catch(() => {})
+  } else {
+    void secureDeleteServerSecret(server.id, 'saslPassword').catch(() => {})
+  }
 }
 
 interface IRCStore {
@@ -382,6 +399,7 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
           activeView: state.activeView.serverId ? state.activeView : { serverId: id, channelId: '' },
         }
       })
+      persistServerSecrets(server)
       get().connectServer(id)
       return
     }
@@ -470,12 +488,20 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
       const servers = state.servers.map((s) =>
         s.id === serverId ? { ...s, ...data } : s
       )
+      const updated = servers.find((s) => s.id === serverId)
+      if (updated) {
+        persistServerSecrets(updated)
+      }
       saveServersSnapshot(servers)
       return { servers }
     })
   },
 
   removeServer: (serverId) => {
+    if (isLiveBuild) {
+      void secureDeleteServerSecret(serverId, 'password').catch(() => {})
+      void secureDeleteServerSecret(serverId, 'saslPassword').catch(() => {})
+    }
     set((state) => {
       const newServers = state.servers.filter((s) => s.id !== serverId)
       let newView = state.activeView
@@ -509,18 +535,21 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
       if (!server) return
       get().updateServerStatus(serverId, 'connecting')
       get().addServerMessage(serverId, `Connecting to ${server.host}:${server.port}${server.ssl ? ' (TLS)' : ''}...`)
-      void connectNativeIrc({
-        serverId,
-        host: server.host,
-        port: server.port,
-        ssl: server.ssl,
-        allowInvalidCerts: !!server.allowInvalidCerts,
-        nickname: server.nickname,
-        username: server.username,
-        realName: server.realName,
-        password: server.password,
-        autoJoinChannels: server.autoJoinChannels,
-      }).catch((err) => {
+      void (async () => {
+        const storedPassword = await secureGetServerSecret(serverId, 'password').catch(() => null)
+        await connectNativeIrc({
+          serverId,
+          host: server.host,
+          port: server.port,
+          ssl: server.ssl,
+          allowInvalidCerts: !!server.allowInvalidCerts,
+          nickname: server.nickname,
+          username: server.username,
+          realName: server.realName,
+          password: storedPassword ?? server.password,
+          autoJoinChannels: server.autoJoinChannels,
+        })
+      })().catch((err) => {
         get().updateServerStatus(serverId, 'disconnected')
         get().addServerMessage(serverId, `Connection failed: ${String(err)}`)
       })
