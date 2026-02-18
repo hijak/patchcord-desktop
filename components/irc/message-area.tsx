@@ -78,6 +78,7 @@ interface MessageLineProps {
   density: MessageDensity
   timestampFormat: TimestampFormat
   showJoinPart: boolean
+  isConsole: boolean
   nickColorScheme: "default" | "pastel" | "vivid"
   showStatusPrefixesInChat: boolean
   syntaxHighlighting: boolean
@@ -93,6 +94,7 @@ function MessageLine({
   density,
   timestampFormat,
   showJoinPart,
+  isConsole,
   nickColorScheme,
   showStatusPrefixesInChat,
   syntaxHighlighting,
@@ -203,6 +205,13 @@ function MessageLine({
       useIRCStore.getState().openDM(serverId, nick)
     }
 
+    const handlePasteIntoInput = () => {
+      const sel = getSelectedText().trim()
+      const text = sel || baseText
+      if (!text) return
+      emitInputInsert({ text, mode: "append" })
+    }
+
     return (
       <ContextMenu>
         <ContextMenuTrigger asChild>
@@ -213,12 +222,21 @@ function MessageLine({
         <ContextMenuContent>
           <ContextMenuItem onSelect={handleCopySelection}>Copy selection</ContextMenuItem>
           <ContextMenuItem onSelect={handleCopyMessage}>Copy entire message</ContextMenuItem>
-          <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleQuoteUser}>Quote user</ContextMenuItem>
-          <ContextMenuItem onSelect={handleQuoteText}>Quote text</ContextMenuItem>
-          <ContextMenuSeparator />
-          <ContextMenuItem onSelect={handleWhoisUser}>Whois user</ContextMenuItem>
-          <ContextMenuItem onSelect={handleDmUser}>DM user</ContextMenuItem>
+          {isConsole ? (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem onSelect={handlePasteIntoInput}>Paste into input</ContextMenuItem>
+            </>
+          ) : (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem onSelect={handleQuoteUser}>Quote user</ContextMenuItem>
+              <ContextMenuItem onSelect={handleQuoteText}>Quote text</ContextMenuItem>
+              <ContextMenuSeparator />
+              <ContextMenuItem onSelect={handleWhoisUser}>Whois user</ContextMenuItem>
+              <ContextMenuItem onSelect={handleDmUser}>DM user</ContextMenuItem>
+            </>
+          )}
         </ContextMenuContent>
       </ContextMenu>
     )
@@ -406,6 +424,7 @@ export function MessageArea() {
               density={settings.messageDensity}
               timestampFormat={settings.timestampFormat}
               showJoinPart={settings.showJoinPartQuit}
+              isConsole={isServerConsole}
               nickColorScheme={settings.nickColorScheme}
               showStatusPrefixesInChat={settings.showStatusPrefixesInChat}
               syntaxHighlighting={settings.syntaxHighlighting}

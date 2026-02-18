@@ -28,6 +28,10 @@ pub struct IrcEvent {
     /// Full IRC prefix, e.g. "nick!user@host"
     pub ident: Option<String>,
     pub content: Option<String>,
+    /// IRCv3 server-time tag, if present (RFC3339 timestamp)
+    pub time: Option<String>,
+    /// IRCv3 msgid tag, if present
+    pub msgid: Option<String>,
     pub users: Option<Vec<String>>,
     pub raw: Option<String>,
     pub status: Option<String>,
@@ -61,6 +65,8 @@ pub async fn connect(
         nick: None,
         ident: None,
         content: None,
+        time: None,
+        msgid: None,
         users: None,
         raw: None,
         status: Some("connecting".to_string()),
@@ -108,6 +114,8 @@ pub async fn connect(
                 nick: None,
                 ident: None,
                 content: None,
+                time: None,
+                msgid: None,
                 users: None,
                 raw: Some(line),
                 status: None,
@@ -139,6 +147,8 @@ pub async fn connect(
                         nick: None,
                         ident: None,
                         content: None,
+                        time: None,
+                        msgid: None,
                         users: None,
                         raw: Some(raw.clone()),
                         status: None,
@@ -159,6 +169,8 @@ pub async fn connect(
             nick: None,
             ident: None,
             content: None,
+            time: None,
+            msgid: None,
             users: None,
             raw: None,
             status: Some("disconnected".to_string()),
@@ -168,7 +180,6 @@ pub async fn connect(
 
     // Periodic latency PING loop
     let sid_ping = server_id.clone();
-    let tx_ping = tx.clone();
     let app_ping = app.clone();
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(Duration::from_secs(20));
@@ -205,6 +216,8 @@ pub async fn connect(
                     nick: None,
                     ident: None,
                     content: Some(format!("Latency PING failed: {err}")),
+                    time: None,
+                    msgid: None,
                     users: None,
                     raw: None,
                     status: None,
@@ -215,7 +228,13 @@ pub async fn connect(
         }
     });
 
+    // Request IRCv3 capabilities supported by Libera.Chat that we understand.
+    // We optimistically request them up front; the server will ACK/NAK as needed.
     send_line(&tx, "CAP LS 302");
+    send_line(
+        &tx,
+        "CAP REQ :message-tags server-time batch invite-notify",
+    );
     if let Some(pass) = password {
         send_line(&tx, &format!("PASS {pass}"));
     }
@@ -235,6 +254,8 @@ pub async fn connect(
         nick: None,
         ident: None,
         content: None,
+        time: None,
+        msgid: None,
         users: None,
         raw: None,
         status: Some("connected".to_string()),
@@ -289,6 +310,10 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
     let parsed = parse_irc(raw);
     let cmd = parsed.command.as_str();
 
+    // IRCv3 message tags we currently care about
+    let time_tag = parsed.tags.get("time").cloned();
+    let msgid_tag = parsed.tags.get("msgid").cloned();
+
     if cmd == "PING" {
         if let Some(token) = parsed.trailing.as_ref().or(parsed.params.first()) {
             send_line(tx, &format!("PONG :{token}"));
@@ -320,6 +345,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                     nick: None,
                     ident: None,
                     content: Some(ms.to_string()),
+                    time: None,
+                    msgid: None,
                     users: None,
                     raw: None,
                     status: None,
@@ -340,6 +367,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                     nick: parsed.nick(),
                     ident: parsed.prefix.clone(),
                     content: Some(content),
+                    time: time_tag.clone(),
+                    msgid: msgid_tag.clone(),
                     users: None,
                     raw: None,
                     status: None,
@@ -356,6 +385,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                     nick: parsed.nick(),
                     ident: parsed.prefix.clone(),
                     content: Some(content),
+                    time: time_tag.clone(),
+                    msgid: msgid_tag.clone(),
                     users: None,
                     raw: None,
                     status: None,
@@ -373,6 +404,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                     nick: parsed.nick(),
                     ident: parsed.prefix.clone(),
                     content: None,
+                    time: time_tag.clone(),
+                    msgid: msgid_tag.clone(),
                     users: None,
                     raw: None,
                     status: None,
@@ -389,6 +422,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                     nick: parsed.nick(),
                     ident: parsed.prefix.clone(),
                     content: parsed.trailing.clone(),
+                    time: time_tag.clone(),
+                    msgid: msgid_tag.clone(),
                     users: None,
                     raw: None,
                     status: None,
@@ -405,6 +440,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                 nick: None,
                 ident: None,
                 content: None,
+                time: time_tag.clone(),
+                msgid: msgid_tag.clone(),
                 users: None,
                 raw: None,
                 status: None,
@@ -424,6 +461,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                     nick: None,
                     ident: None,
                     content: Some(format!("{users} {topic}")),
+                     time: time_tag.clone(),
+                     msgid: msgid_tag.clone(),
                     users: None,
                     raw: None,
                     status: None,
@@ -440,6 +479,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                 nick: None,
                 ident: None,
                 content: None,
+                time: time_tag.clone(),
+                msgid: msgid_tag.clone(),
                 users: None,
                 raw: None,
                 status: None,
@@ -455,6 +496,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                     nick: None,
                     ident: None,
                     content: parsed.trailing.clone(),
+                    time: time_tag.clone(),
+                    msgid: msgid_tag.clone(),
                     users: None,
                     raw: None,
                     status: None,
@@ -500,6 +543,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                     nick: None,
                     ident: None,
                     content: None,
+                    time: time_tag.clone(),
+                    msgid: msgid_tag.clone(),
                     users: Some(encoded),
                     raw: None,
                     status: None,
@@ -516,6 +561,8 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
                     nick: parsed.nick(),
                     ident: parsed.prefix.clone(),
                     content: parsed.trailing.clone(),
+                    time: time_tag.clone(),
+                    msgid: msgid_tag.clone(),
                     users: None,
                     raw: None,
                     status: None,
@@ -602,16 +649,50 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
             }
             .emit(app);
         }
+        "INVITE" => {
+            // INVITE <nick> <channel>
+            if parsed.params.len() >= 2 {
+                let target = parsed.params[0].clone();
+                let channel = parsed.params[1].clone();
+                IrcEvent {
+                    server_id: server_id.to_string(),
+                    kind: "invite".to_string(),
+                    channel: Some(channel),
+                    nick: parsed.nick(),
+                    ident: parsed.prefix.clone(),
+                    content: Some(target),
+                    time: time_tag.clone(),
+                    msgid: msgid_tag.clone(),
+                    users: None,
+                    raw: None,
+                    status: None,
+                }
+                .emit(app);
+            }
+        }
         _ => {
+            // Generic numeric replies (including WHOIS numerics like 311-319, 330, 671, etc.)
+            // Build a readable line that includes both params and trailing text so we don't
+            // lose important fields like nick/user/host.
             if cmd.chars().all(|c| c.is_ascii_digit()) {
-                if let Some(content) = parsed.trailing.clone() {
+                let mut parts = Vec::new();
+                if !parsed.params.is_empty() {
+                    parts.push(parsed.params.join(" "));
+                }
+                if let Some(trailing) = parsed.trailing.clone() {
+                    parts.push(trailing);
+                }
+                let text = parts.join(" ");
+                if !text.is_empty() {
                     IrcEvent {
                         server_id: server_id.to_string(),
                         kind: "server".to_string(),
                         channel: None,
                         nick: None,
                         ident: None,
-                        content: Some(content),
+                        content: Some(text),
+                        time: time_tag.clone(),
+                        msgid: msgid_tag.clone(),
                         users: None,
                         raw: None,
                         status: None,
@@ -629,6 +710,8 @@ struct Parsed {
     command: String,
     params: Vec<String>,
     trailing: Option<String>,
+    // IRCv3 message tags (key=value)
+    tags: HashMap<String, String>,
 }
 
 impl Parsed {
@@ -643,6 +726,31 @@ impl Parsed {
 fn parse_irc(raw: &str) -> Parsed {
     let mut rest = raw.trim_end().to_string();
     let mut parsed = Parsed::default();
+
+    // Parse IRCv3 message tags
+    if let Some(without_at) = rest.strip_prefix('@') {
+        if let Some((tags_part, next)) = without_at.split_once(' ') {
+            for tag in tags_part.split(';') {
+                if tag.is_empty() {
+                    continue;
+                }
+                let mut iter = tag.splitn(2, '=');
+                let key = iter.next().unwrap().to_string();
+                let value_raw = iter.next().unwrap_or("");
+                // Minimal unescaping per IRCv3 spec
+                let value = value_raw
+                    .replace("\\:", ";")
+                    .replace("\\s", " ")
+                    .replace("\\\\", "\\")
+                    .replace("\\r", "\r")
+                    .replace("\\n", "\n");
+                parsed.tags.insert(key, value);
+            }
+            rest = next.to_string();
+        } else {
+            rest = without_at.to_string();
+        }
+    }
 
     if let Some(without_colon) = rest.strip_prefix(':') {
         if let Some((prefix, next)) = without_colon.split_once(' ') {

@@ -8,6 +8,8 @@ export interface NativeIrcEvent {
   nick?: string
   ident?: string
   content?: string
+  time?: string
+  msgid?: string
   users?: string[]
   raw?: string
   status?: "connected" | "connecting" | "disconnected"

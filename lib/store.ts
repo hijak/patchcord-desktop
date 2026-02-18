@@ -309,7 +309,8 @@ function nowMessage(
   nickname: string,
   content: string,
   type: MessageType = 'message',
-  isHighlight = false
+  isHighlight = false,
+  timestamp?: Date
 ): IRCMessage {
   return {
     id: `msg-${++msgCounter}`,
@@ -318,7 +319,7 @@ function nowMessage(
     type,
     nickname,
     content,
-    timestamp: new Date(),
+    timestamp: timestamp ?? new Date(),
     isHighlight,
   }
 }
@@ -1162,7 +1163,8 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
           )
         const isHighlight = hasNickMention || hasCustomHighlight
 
-        const msg = nowMessage(event.server_id, channelId, nickname, content, type, isHighlight)
+        const ts = event.time ? new Date(event.time) : undefined
+        const msg = nowMessage(event.server_id, channelId, nickname, content, type, isHighlight, ts)
         const isSelfJoinOrPart = myNick && nickname === myNick && (type === 'join' || type === 'part')
         // System messages (topic, mode changes, etc.) should not increment unread
         const isSystemMessage = type === 'system' || type === 'mode'
@@ -1292,6 +1294,24 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
           }
           break
         }
+        case 'invite': {
+          // INVITE notifications (invite-notify capability)
+          const server = get().servers.find((s) => s.id === event.server_id)
+          const myNick = server?.nickname
+          const channelName = event.channel || ''
+          const targetNick = event.content || ''
+          const inviter =
+            event.nick ||
+            (event.ident ? event.ident.split('!')[0] || 'someone' : 'someone')
+
+          const text =
+            myNick && targetNick.toLowerCase() === myNick.toLowerCase()
+              ? `${inviter} has invited you to ${channelName || 'a channel'}`
+              : `${inviter} invited ${targetNick} to ${channelName || 'a channel'}`
+
+          get().addServerMessage(event.server_id, text)
+          break
+        }
         case 'join':
           if (event.channel) {
             const displayIdent =
@@ -1371,13 +1391,15 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
                 (settings.highlightWords || []).some((w) =>
                   lowerContent.includes(w.toLowerCase())
                 )
+              const ts = event.time ? new Date(event.time) : undefined
               const msg = nowMessage(
                 event.server_id,
                 dmChannel.id,
                 dmNick,
                 event.content,
                 'message',
-                hasCustomHighlight
+                hasCustomHighlight,
+                ts
               )
               set((s) => ({
                 servers: s.servers.map((srv) =>
@@ -1398,8 +1420,21 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
           }
           break
         case 'notice':
-          if (event.channel && event.nick && event.content) {
-            appendChannelMessage(event.channel, event.nick, event.content, 'notice')
+          if (event.nick && event.content) {
+            const nickLower = event.nick.toLowerCase()
+
+            // Network status-style notices (e.g. "-*status-") should go to the server console,
+            // not into individual channels.
+            if (nickLower === '-*status-') {
+              get().addServerMessage(event.server_id, event.content, 'notice', event.nick)
+              break
+            }
+
+            if (event.channel) {
+              appendChannelMessage(event.channel, event.nick, event.content, 'notice')
+            } else {
+              get().addServerMessage(event.server_id, event.content, 'notice', event.nick)
+            }
           }
           break
         case 'topic':
