@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex as StdMutex};
+use std::time::{Duration, Instant};
 
 use once_cell::sync::Lazy;
 use serde::Serialize;
@@ -12,6 +13,8 @@ use tokio_native_tls::TlsConnector;
 type WriterMap = Arc<Mutex<HashMap<String, mpsc::UnboundedSender<String>>>>;
 
 static WRITERS: Lazy<WriterMap> = Lazy::new(|| Arc::new(Mutex::new(HashMap::new())));
+static PING_TIMERS: Lazy<StdMutex<HashMap<String, Instant>>> =
+    Lazy::new(|| StdMutex::new(HashMap::new()));
 
 trait AsyncReadWrite: AsyncRead + AsyncWrite {}
 impl<T: AsyncRead + AsyncWrite + ?Sized> AsyncReadWrite for T {}
@@ -163,6 +166,55 @@ pub async fn connect(
         .emit(&app_reader);
     });
 
+    // Periodic latency PING loop
+    let sid_ping = server_id.clone();
+    let tx_ping = tx.clone();
+    let app_ping = app.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(20));
+        loop {
+            interval.tick().await;
+
+            // Stop if the connection has been removed
+            {
+                let writers = WRITERS.lock().await;
+                if !writers.contains_key(&sid_ping) {
+                    break;
+                }
+            }
+
+            // Create a unique token and record send time
+            let now = Instant::now();
+            let token = format!(
+                "pc-{}",
+                now.elapsed().as_nanos() // monotonic, just to make token unique
+            );
+            {
+                let mut timers = PING_TIMERS
+                    .lock()
+                    .expect("PING_TIMERS mutex poisoned");
+                timers.insert(format!("{}:{}", sid_ping, token.clone()), now);
+            }
+
+            let line = format!("PING :{token}");
+            if let Err(err) = send_to(&sid_ping, line).await {
+                IrcEvent {
+                    server_id: sid_ping.clone(),
+                    kind: "server".to_string(),
+                    channel: None,
+                    nick: None,
+                    ident: None,
+                    content: Some(format!("Latency PING failed: {err}")),
+                    users: None,
+                    raw: None,
+                    status: None,
+                }
+                .emit(&app_ping);
+                break;
+            }
+        }
+    });
+
     send_line(&tx, "CAP LS 302");
     if let Some(pass) = password {
         send_line(&tx, &format!("PASS {pass}"));
@@ -240,6 +292,40 @@ fn handle_line(app: &AppHandle, server_id: &str, raw: &str, tx: &mpsc::Unbounded
     if cmd == "PING" {
         if let Some(token) = parsed.trailing.as_ref().or(parsed.params.first()) {
             send_line(tx, &format!("PONG :{token}"));
+        }
+        return;
+    }
+
+    if cmd == "PONG" {
+        if let Some(token) = parsed
+            .trailing
+            .as_ref()
+            .or(parsed.params.first())
+            .cloned()
+        {
+            let key = format!("{server_id}:{token}");
+            let maybe_start = {
+                let mut timers = PING_TIMERS
+                    .lock()
+                    .expect("PING_TIMERS mutex poisoned");
+                timers.remove(&key)
+            };
+
+            if let Some(start) = maybe_start {
+                let ms = start.elapsed().as_millis() as u64;
+                IrcEvent {
+                    server_id: server_id.to_string(),
+                    kind: "latency".to_string(),
+                    channel: None,
+                    nick: None,
+                    ident: None,
+                    content: Some(ms.to_string()),
+                    users: None,
+                    raw: None,
+                    status: None,
+                }
+                .emit(app);
+            }
         }
         return;
     }

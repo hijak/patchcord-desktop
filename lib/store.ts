@@ -1206,6 +1206,17 @@ export const useIRCStore = create<IRCStore>((set, get) => ({
         case 'status':
           if (event.status) get().updateServerStatus(event.server_id, event.status)
           break
+        case 'latency': {
+          const ms = event.content ? parseInt(event.content, 10) : NaN
+          if (!Number.isNaN(ms) && Number.isFinite(ms) && ms >= 0) {
+            set((state) => ({
+              servers: state.servers.map((s) =>
+                s.id === event.server_id ? { ...s, latency: ms } : s
+              ),
+            }))
+          }
+          break
+        }
         case 'raw_in':
         case 'raw_out':
           if (event.raw) {

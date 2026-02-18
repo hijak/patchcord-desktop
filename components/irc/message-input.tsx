@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { isLiveBuild } from "@/lib/build-mode"
 import { sendNativeRaw } from "@/lib/irc-native"
 import { ColorPicker } from "./color-picker"
+import { subscribeInputInsert } from "@/lib/input-bridge"
 
 const IRC_COMMANDS = [
   { cmd: "/join", desc: "Join a channel", usage: "/join #channel" },
@@ -415,6 +416,29 @@ export function MessageInput() {
     words[words.length - 1] = matchingNicks[nextIndex] + (words.length === 1 ? ": " : " ")
     setValue(words.join(" "))
   }, [value, channel, tabCompleteIndex])
+
+  // Allow other components (e.g., message context menu) to insert or quote text into the input.
+  useEffect(() => {
+    const unsubscribe = subscribeInputInsert(({ text, mode = "append" }) => {
+      setValue((prev) => {
+        if (mode === "replace" || !prev) return text
+        const needsSpace = !prev.endsWith(" ") && !text.startsWith(" ")
+        return prev + (needsSpace ? " " : "") + text
+      })
+
+      // Move cursor to end after React state updates.
+      setTimeout(() => {
+        const input = inputRef.current
+        if (!input) return
+        const len = input.value.length
+        input.setSelectionRange(len, len)
+        input.focus()
+        setSelectionStart(len)
+        setSelectionEnd(len)
+      }, 0)
+    })
+    return unsubscribe
+  }, [])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Tab") {

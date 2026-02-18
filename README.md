@@ -1,12 +1,10 @@
-# 🚀 Patchcord
+# 🚀 Patchcord Desktop
 
 > A modern, developer-focused IRC client built with Next.js and Tauri
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com/patchcord/patchcord/releases)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/patchcord/patchcord/release-prod.yml?branch=main)](https://github.com/patchcord/patchcord/actions)
-
-![Patchcord Banner](docs/assets/banner.png)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](https://github.com/hijak/patchcord-desktop/releases)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/hijak/patchcord-desktop/release-prod.yml?branch=main)](https://github.com/hijak/patchcord-desktop/actions)
 
 ## ✨ Features
 
@@ -25,7 +23,7 @@
 
 ### Desktop Application
 
-Download the latest release for your platform from the [Releases page](https://github.com/patchcord/patchcord/releases):
+Download the latest release for your platform from the [Releases page](https://github.com/hijak/patchcord-desktop/releases):
 
 | Platform | Package |
 |----------|---------|
@@ -37,8 +35,8 @@ Download the latest release for your platform from the [Releases page](https://g
 
 ```bash
 # Clone the repository
-git clone https://github.com/patchcord/patchcord.git
-cd patchcord/frontend
+git clone https://github.com/hijak/patchcord-desktop.git
+cd patchcord-desktop
 
 # Install dependencies
 pnpm install
@@ -165,7 +163,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - 📧 Email: support@patchcord.dev
 - 💬 IRC: #patchcord on Libera.Chat
-- 🐛 Issues: [GitHub Issues](https://github.com/patchcord/patchcord/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/hijak/patchcord-desktop/issues)
 
 ---
 

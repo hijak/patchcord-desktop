@@ -10,6 +10,8 @@ import type { IRCMessage, MessageDensity, TimestampFormat } from "@/lib/types"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { ImagePreview } from "./image-preview"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { emitInputInsert } from "@/lib/input-bridge"
 
 function formatTimestamp(date: Date, format: TimestampFormat): string {
   const h = date.getHours()
@@ -124,9 +126,107 @@ function MessageLine({
   // Image URLs for preview
   const imageUrls = inlineImagePreviews ? extractImageUrls(message.content) : []
 
+  let lastContextSelection = ""
+
+  const getSelectedText = () => {
+    if (typeof window === "undefined") return ""
+    const sel = window.getSelection()
+    return sel ? sel.toString() : ""
+  }
+
+  const copyToClipboard = async (text: string) => {
+    if (!text) return
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text)
+        return
+      }
+    } catch {
+      // fall through to fallback
+    }
+    try {
+      const textarea = document.createElement("textarea")
+      textarea.value = text
+      textarea.style.position = "fixed"
+      textarea.style.opacity = "0"
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand("copy")
+      document.body.removeChild(textarea)
+    } catch {
+      // ignore
+    }
+  }
+
+  const wrapWithContextMenu = (node: React.ReactNode) => {
+    const nick = message.nickname
+    const baseText = message.content
+    const serverId = message.serverId
+
+    const handleContextMenuCapture: React.MouseEventHandler<HTMLDivElement> = () => {
+      const sel = getSelectedText().trim()
+      if (sel) {
+        lastContextSelection = sel
+      }
+    }
+
+    const handleCopySelection = async () => {
+      const txt = (lastContextSelection || getSelectedText().trim())
+      if (txt) await copyToClipboard(txt)
+    }
+
+    const handleCopyMessage = async () => {
+      if (baseText) await copyToClipboard(baseText)
+    }
+
+    const handleQuoteUser = () => {
+      if (!nick) return
+      emitInputInsert({ text: `@${nick} `, mode: "append" })
+    }
+
+    const handleQuoteText = () => {
+      const sel = getSelectedText().trim()
+      const text = sel || baseText
+      if (!text) return
+      const quoted = `> ${nick}: ${text}`
+      emitInputInsert({ text: quoted, mode: "append" })
+    }
+
+    const handleWhoisUser = () => {
+      if (!nick) return
+      emitInputInsert({ text: `/whois ${nick}`, mode: "replace" })
+    }
+
+    const handleDmUser = () => {
+      if (!nick || !serverId) return
+      // Open or focus DM with this user
+      useIRCStore.getState().openDM(serverId, nick)
+    }
+
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div onContextMenuCapture={handleContextMenuCapture}>
+            {node}
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onSelect={handleCopySelection}>Copy selection</ContextMenuItem>
+          <ContextMenuItem onSelect={handleCopyMessage}>Copy entire message</ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onSelect={handleQuoteUser}>Quote user</ContextMenuItem>
+          <ContextMenuItem onSelect={handleQuoteText}>Quote text</ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onSelect={handleWhoisUser}>Whois user</ContextMenuItem>
+          <ContextMenuItem onSelect={handleDmUser}>DM user</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    )
+  }
+
   // Nick change
   if (message.type === "nick_change") {
-    return (
+    return wrapWithContextMenu(
       <div className={cn(rowBase, paddingClass)} style={{ fontSize }}>
         <TimestampBadge date={message.timestamp} format={timestampFormat} fontSize={fontSize} />
         <span className="min-w-0 text-muted-foreground/60 italic" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
@@ -138,7 +238,7 @@ function MessageLine({
 
   // Kick
   if (message.type === "kick") {
-    return (
+    return wrapWithContextMenu(
       <div className={cn(rowBase, "bg-red-500/5 border-l-2 border-red-500/30", paddingClass)} style={{ fontSize }}>
         <TimestampBadge date={message.timestamp} format={timestampFormat} fontSize={fontSize} />
         <span className="min-w-0 text-red-400/80" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
@@ -150,7 +250,7 @@ function MessageLine({
 
   // Mode change
   if (message.type === "mode") {
-    return (
+    return wrapWithContextMenu(
       <div className={cn(rowBase, paddingClass)} style={{ fontSize }}>
         <TimestampBadge date={message.timestamp} format={timestampFormat} fontSize={fontSize} />
         <span className="min-w-0 text-muted-foreground" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
@@ -162,7 +262,7 @@ function MessageLine({
 
   // CTCP
   if (message.type === "ctcp") {
-    return (
+    return wrapWithContextMenu(
       <div className={cn(rowBase, paddingClass)} style={{ fontSize }}>
         <TimestampBadge date={message.timestamp} format={timestampFormat} fontSize={fontSize} />
         <span className="min-w-0 text-cyan-400/80" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
@@ -173,7 +273,7 @@ function MessageLine({
   }
 
   if (message.type === "join" || message.type === "part" || message.type === "quit") {
-    return (
+    return wrapWithContextMenu(
       <div className={cn(rowBase, paddingClass)} style={{ fontSize }}>
         <TimestampBadge date={message.timestamp} format={timestampFormat} fontSize={fontSize} />
         <span className="min-w-0 text-muted-foreground/60 italic" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
@@ -184,7 +284,7 @@ function MessageLine({
   }
 
   if (message.type === "system") {
-    return (
+    return wrapWithContextMenu(
       <div className={cn(rowBase, paddingClass)} style={{ fontSize }}>
         <TimestampBadge date={message.timestamp} format={timestampFormat} fontSize={fontSize} />
         <span className="min-w-0 text-muted-foreground" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>*** {message.content}</span>
@@ -193,7 +293,7 @@ function MessageLine({
   }
 
   if (message.type === "notice") {
-    return (
+    return wrapWithContextMenu(
       <div className={cn(rowBase, "bg-yellow-500/5 border-l-2 border-yellow-500/30", paddingClass)} style={{ fontSize }}>
         <TimestampBadge date={message.timestamp} format={timestampFormat} fontSize={fontSize} />
         <span className="shrink-0 font-bold text-yellow-500">-{message.nickname}-</span>
@@ -205,7 +305,7 @@ function MessageLine({
   }
 
   if (message.type === "action") {
-    return (
+    return wrapWithContextMenu(
       <div className={cn(rowBase, paddingClass)} style={{ fontSize }}>
         <TimestampBadge date={message.timestamp} format={timestampFormat} fontSize={fontSize} />
         <span className="min-w-0 italic text-foreground/80" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
@@ -231,7 +331,7 @@ function MessageLine({
     const prefix = user.isOp ? "@" : user.isVoiced ? "+" : ""
     return prefix ? `${prefix}${message.nickname}` : message.nickname
   })()
-  return (
+  return wrapWithContextMenu(
     <div
       className={cn(
         rowBase,

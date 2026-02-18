@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react"
 import { Check, Copy } from "lucide-react"
 import { useIRCStore } from "@/lib/store"
 import { getThemeById } from "@/lib/themes"
+import { isLiveBuild } from "@/lib/build-mode"
+import { shellOpenExternal } from "@/lib/external-links"
 import { hasIRCFormatting, parseIRCColors, getIRCColor, stripIRCFormatting } from "@/lib/irc-colors"
 
 interface CodeBlockProps {
@@ -135,16 +137,25 @@ function parseInlineWithinSpan(text: string, startKey: number): React.ReactNode[
         </code>
       )
     } else if (m[3]) {
+      const url = m[3]
       elements.push(
         <a
           key={`url-${key++}`}
-          href={m[3]}
+          href={url}
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-400 underline decoration-blue-400/30 underline-offset-2 transition-colors hover:text-blue-300 hover:decoration-blue-300/50"
           style={{ overflowWrap: "anywhere", wordBreak: "break-all" }}
+          onClick={(e) => {
+            if (isLiveBuild) {
+              e.preventDefault()
+              shellOpenExternal(url).catch(() => {
+                window.open(url, "_blank", "noopener,noreferrer")
+              })
+            }
+          }}
         >
-          {m[3]}
+          {url}
         </a>
       )
     }

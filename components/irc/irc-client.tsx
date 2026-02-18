@@ -210,9 +210,12 @@ export function IRCClient() {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <span className="font-mono text-lg font-bold text-primary-foreground">P</span>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/patchcord-logo.svg"
+            alt="Patchcord"
+            className="h-10 w-10 rounded"
+          />
           <p className="font-mono text-xs text-muted-foreground animate-pulse">Loading Patchcord...</p>
         </div>
       </div>
